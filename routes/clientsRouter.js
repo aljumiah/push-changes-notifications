@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const http = require('http');
-
+const logging = require('../components/logging')
 const clientsRouter = express.Router();
 
 
@@ -61,23 +61,17 @@ const subscribe = async (id,url) =>  {
         
         async function(err, result) {
             if (err) throw err;
-            //await console.log(JSON.stringify(result, null, 2));
-            console.log(`\n\n------------------------------------------------------------------------------------------`)
-            console.log(`Target Endpoint Ready`)
-            await console.log(result['_responses'][0]['r'].map(obj => 'Changes On => ' + obj['subscriped_ids'] + ' Send Notification To => ' + obj['push_url'] + ''))
-            console.log(`----------------------------------------------------------------------------------------------`)
-
+            console.log('--------------------------------\n\x1b[36m%s\x1b[0m',`Target Ready`)
+            await result['_responses'][0]['r'].map(obj => 
+                logging.targetReady(obj['subscriped_ids'],obj['push_url'])
+            );   
         })
 
     r.table('info').get(id).changes().run(connection, function(err, cursor) {
         cursor.eachAsync(function (row) {
-            console.log(`\n-------------------------------------------------`)
-            console.log(`Data Deleivred`)
-            console.log(`-------------------------------------------------`)
-            console.log('Target Endpoint: ' + url +'\nValue :' + JSON.stringify(row));
-            console.log(`\n-------------------------------------------------`)
-            //console.log('Data sent to target endpoint: ' + url + '\nthe new value' + JSON.stringify(row));
 
+            logging.deleviryLog(url,JSON.stringify(row))
+            
             const data = JSON.stringify(row)
             const options = {
                 hostname: 'localhost',
@@ -90,21 +84,9 @@ const subscribe = async (id,url) =>  {
               }
 
               const req = http.request(options, res => {
-                //console.log(`statusCode: ${res.statusCode}`)
-                if(res.statusCode == 200){
-                    console.log(`\n-------------------------------------------------`)
-                    console.log(`Target Receive Status Response: ${res.statusCode}`)
-                    console.log(`\n-------------------------------------------------`)
-                  }else{
-                    console.log(`deilvery issue, statuse: ${res.statusCode}`)
-                  }
                 res.on('data', d => {
-                    console.log(`-------------------------------------------------`) 
-                    console.log(`Target Response: `) 
-                    console.log(`\n-------------------------------------------------`) 
+                    logging.targetResponse(res.statusCode,d);
                     process.stdout.write(d)
-                    console.log(`\n-------------------------------------------------`) 
-
                 })
               })
 
