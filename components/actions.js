@@ -7,7 +7,7 @@ r.connect( {host: 'localhost', port: 28015, db: 'push_notification'}, function(e
     connection = conn;
 })
 
- exports.subscribeConf = async ()  =>  {
+ exports.prepareSubscribers = async ()  =>  {
 
     var connection = null;
     await r.connect( {host: 'localhost', port: 28015, db: 'push_notification'}, function(err, conn) {
@@ -18,17 +18,22 @@ r.connect( {host: 'localhost', port: 28015, db: 'push_notification'}, function(e
     await r.table('subscribed_clients').map(function(element) {
         return element
     }).run(connection, 
-        
         async function(err, result) {
             if (err) throw err;
-            if(Object.keys(result['_responses'].length > 0)){
-              console.log('--------------------------------\n\x1b[36m%s\x1b[0m',`Target Ready`)
-              await result['_responses'][0]['r'].map(obj => 
-                  logging.targetReady(obj['subscriped_ids'],obj['push_url'])
-              );     
-              await result['_responses'][0]['r'].map(obj => 
+            // console.log(result)
+            
+            if(Object.entries(result['_responses']).length !== 0){
 
-                  r.table('info').get(obj['subscriped_ids']).changes().run(connection, function(err, cursor) {
+            var subcList = result['_responses'][0]['r']
+
+            //   console.log('--------------------------------\n\x1b[36m%s\x1b[0m',`Target Ready`)
+              await subcList.map(obj => 
+                  logging.targetReady(obj['id'],obj['subscriped_ids'],obj['push_url'])
+              );     
+              //await subcList.map(obj => console.log('seeeeeeeee : '+ obj['subscriped_ids']))
+              await subcList.map(obj => 
+                obj['subscriped_ids'].map( number => 
+                  r.table('info').get(number).changes().run(connection, function(err, cursor) {
                       cursor.eachAsync(function (row) {
   
                           logging.deleviryLog(obj['push_url'],JSON.stringify(row))
@@ -58,8 +63,7 @@ r.connect( {host: 'localhost', port: 28015, db: 'push_notification'}, function(e
                             req.end()
                       });
                     })
-                  
-                  
+                )
                   
                   )
             }else{
@@ -99,11 +103,13 @@ exports.subscribe = async (id,subscriped_ids,url) =>  {
             if (err) throw err;
             console.log('--------------------------------\n\x1b[36m%s\x1b[0m',`Target Ready`)
             await result['_responses'][0]['r'].map(obj => 
-                logging.targetReady(obj['subscriped_ids'],obj['push_url'])
+                logging.targetReady(obj['id'],obj['subscriped_ids'],obj['push_url'])
             );   
         })
-
-   await this.subscribeToId(subscriped_ids,url);
+        subscriped_ids.map(number =>
+             this.subscribeToId(number,url)
+            )
+   
 }
 
 exports.subscribeToId = (id,url) => {
@@ -137,7 +143,5 @@ exports.subscribeToId = (id,url) => {
               req.end()
         });
       })
-
-
 }
 

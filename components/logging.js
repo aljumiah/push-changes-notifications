@@ -10,9 +10,9 @@ exports.deleviryLog = function(endpoint,Value) {
         console.log(`Timestamp: \x1b[1m%s\x1b[0m \nURL(path): \x1b[32m%s\x1b[0m \nBody: \n\x1b[36m%s\x1b[0m`,currentTimestamp,endpoint,Value);
         console.log(`-------------------------------------------------`)
 };
-exports.targetReady = function(subscriped_ids,push_url){
+exports.targetReady = function(id,subscriped_ids,push_url){
     //  console.log('\x1b[36m%s\x1b[0m',`Target Ready`)
-     console.log(`Changes On => \x1b[34m%s\x1b[0m Send Notification To => \x1b[32m%s\x1b[0m`, subscriped_ids,push_url);     
+     console.log(`Client: \x1b[34m%s\x1b[0m with changes On => [\x1b[34m%s\x1b[0m] Send Notification To => \x1b[32m%s\x1b[0m`, id,subscriped_ids,push_url);     
 }; 
 exports.targetResponse = function(statusCode,res){
     console.log(`\n-------------------------------------------------`)
