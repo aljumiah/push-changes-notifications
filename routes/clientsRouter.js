@@ -4,14 +4,6 @@ const http = require('http');
 const logging = require('../components/logging');
 const actions = require('../components/actions')
 const clientsRouter = express.Router();
-r = require('rethinkdb');
-var connection = null;
-r.connect( {host: 'localhost', port: 28015, db: 'push_notification'}, function(err, conn) {
-    if (err) throw err;
-    connection = conn;
-})
-
-
 
 clientsRouter.use(bodyParser.json());
 
@@ -27,8 +19,6 @@ clientsRouter.route('/add')
     res.end('added the client:' + req.body.id + '\nwith url: ' + req.body.push_url + '\nsubscriped_ids: [' + req.body.subscriped_ids +']');
 })
 
-
-
 clientsRouter.route('/subscribe')
 .all((req,res,next) => {
     res.statusCode = 200;
@@ -40,9 +30,6 @@ clientsRouter.route('/subscribe')
     actions.subscribe(req.body.subscriped_ids , req.body.push_url);
     res.end('subscriped succsfuuly with :' + req.body.subscriped_ids);
 })
-
-
-
 
 
 module.exports = clientsRouter;
